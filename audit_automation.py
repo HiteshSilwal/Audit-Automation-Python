@@ -1,26 +1,21 @@
 """
 Project: Automation for Audit Reconciliation
 Author: Hitesh Silwal (Junior @ University of Idaho)
-Description: This is a project I am building to show how my BIA major 
-can help automate manual accounting tasks like bank recs.
+Major: Business Information & Analytics |
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
-# PART 1: MOCK DATA GENERATION
-# Since I don't have real company data yet, I am making these CSVs 
-# to test if my logic for finding "Red Flags" actually works.
-
+# --- PART 1: MOCK DATA GENERATION ---
 def make_test_files():
-    # What the company thinks happened (Internal Ledger)
+    """Generates synthetic CSV files to simulate an audit environment."""
     ledger_data = {
-        'Ref_ID': ['TXN101', 'TXN102', 'TXN103', 'TXN104'],
-        'Date': ['2026-02-01', '2026-02-03', '2026-02-05', '2026-02-06'],
-        'Amount': [500.00, 125.50, 1000.00, 250.00]
+        'Ref_ID': ['TXN101', 'TXN102', 'TXN103', 'TXN104', 'TXN105'],
+        'Date': ['2026-02-01', '2026-02-03', '2026-02-05', '2026-02-06', '2026-02-07'],
+        'Amount': [500.00, 125.50, 1000.00, 250.00, 75.00]
     }
     
-    # What actually hit the bank (Bank Statement)
-    # Note: I'm leaving out TXN104 to see if the script catches it
     bank_data = {
         'Ref_ID': ['TXN101', 'TXN102', 'TXN103'],
         'Date': ['2026-02-01', '2026-02-03', '2026-02-05'],
@@ -29,40 +24,38 @@ def make_test_files():
     
     pd.DataFrame(ledger_data).to_csv('my_ledger.csv', index=False)
     pd.DataFrame(bank_data).to_csv('my_bank.csv', index=False)
-    print("Files 'my_ledger.csv' and 'my_bank.csv' created for testing.")
+    print("✓ Success: 'my_ledger.csv' and 'my_bank.csv' created.")
 
-# PART 2: THE AUDIT LOGIC
+# --- PART 2 & 3: AUDIT LOGIC & VISUALIZATION ---
 def run_audit():
-    # Loading the data using Pandas (Learning this in BIA classes)
+    """Reconciles data and visualizes financial risk."""
     df_ledger = pd.read_csv('my_ledger.csv')
     df_bank = pd.read_csv('my_bank.csv')
 
-    print("\n--- Running Reconciliation ---")
-
-    # Using a 'left merge' to find things in my books that aren't in the bank
-    # This is like a VLOOKUP but much faster for big data
+    # Merging records to find what is missing from the bank
     check_match = pd.merge(df_ledger, df_bank, on=['Ref_ID', 'Amount'], how='left', indicator=True)
-
-    # If the indicator says 'left_only', it means the bank is missing that transaction
     errors = check_match[check_match['_merge'] == 'left_only']
 
     if not errors.empty:
-        print("!!! ALERT: DISCREPANCIES FOUND !!!")
-        # Just showing the important columns for the auditor to see
+        print("\n!!! ALERT: DISCREPANCIES FOUND !!!")
         print(errors[['Ref_ID', 'Amount', 'Date_x']])
         
-        # Saving these so I can show them to a professor or manager
+        # Save results for portfolio proof
         errors.to_csv('audit_red_flags.csv', index=False)
-        print("\nReport saved as 'audit_red_flags.csv'")
+        
+        # VISUALIZATION (U-Idaho Gold: #F1B82D)
+        plt.figure(figsize=(8, 5))
+        plt.bar(errors['Ref_ID'], errors['Amount'], color='#F1B82D', edgecolor='#A5A9AC', linewidth=2)
+        plt.title('Audit Exceptions: Financial Risk Summary', fontsize=14, fontweight='bold')
+        plt.xlabel('Transaction ID')
+        plt.ylabel('Risk Amount ($)')
+        plt.savefig('vandal_audit_chart.png')
+        print("\n✓ Chart saved as 'vandal_audit_chart.png'")
+        plt.show()
     else:
-        print("Everything matches! No issues found.")
+        print("✓ Success: All records match.")
 
-# Running the script
+# Execution Block
 if __name__ == "__main__":
     make_test_files()
     run_audit()
-    
-# TODO for future: 
-# 1. Add Benford's Law analysis (once I finish BIA 4610)
-# 2. Try to connect this directly to an SQL database (after BIA 4530)
-
