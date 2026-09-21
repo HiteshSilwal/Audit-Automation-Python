@@ -1,6 +1,6 @@
 """
 Project: Interactive Vandal Inventory Manager
-Author: Hitesh Silwal (Junior @ University of Idaho)
+Author: Hitesh Silwal
 Description: A dynamic tool that allows users to input their own 
 audit data into a Python-managed SQLite database.
 """
